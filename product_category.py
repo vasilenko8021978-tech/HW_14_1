@@ -10,9 +10,15 @@ class Product:
 
 
 class Category:
+    # Атрибуты класса — именно такие имена, как в main.py
+    category_count = 0
+    product_count = 0
 
     def __init__(self, name: str, description: str, products: List[Product]):
         self.name = name
         self.description = description
         self.products = products
 
+        # Обновляем счётчики класса
+        Category.category_count += 1
+        Category.product_count += len(products)
