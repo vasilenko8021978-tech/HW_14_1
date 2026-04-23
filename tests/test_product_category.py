@@ -2,40 +2,71 @@ import pytest
 from src.product_category import Product, Category
 
 
-@pytest.fixture
-def sample_product():
-    return Product("Смартфон", "Мощный смартфон", 50000.0, 10)
+@pytest.fixture(autouse=True)
+def reset_counters():
+    """Сбрасывает счётчики перед каждым тестом."""
+    Category.category_count = 0
+    Category.product_count = 0
 
 
-@pytest.fixture
-def sample_category(sample_product):
-    return Category("Электроника", "Техника для дома и офиса", [sample_product])
+def test_product_initialization():
+    product = Product("Телефон", "Описание", 10000.0, 5)
+    assert product.name == "Телефон"
+    assert product.description == "Описание"
+    assert product.price == 10000.0
+    assert product.quantity == 5
 
 
-def test_product_initialization(sample_product):
-    assert sample_product.name == "Смартфон"
-    assert sample_product.description == "Мощный смартфон"
-    assert sample_product.price == 50000.0
-    assert sample_product.quantity == 10
+def test_category_initialization():
+    product = Product("Телефон", "Описание", 10000.0, 5)
+    category = Category("Электроника", "Вся электроника", [product])
+
+    assert category.name == "Электроника"
+    assert category.description == "Вся электроника"
+    assert len(category.products) == 1
+    assert category.products[0] == product
 
 
-def test_category_initialization(sample_category):
-    assert sample_category.name == "Электроника"
-    assert sample_category.description == "Техника для дома и офиса"
-    assert len(sample_category.products) == 1
-    assert sample_category.products[0].name == "Смартфон"
+def test_category_counters_via_instance_and_class():
+    p1 = Product("P1", "Desc1", 100.0, 1)
+    p2 = Product("P2", "Desc2", 200.0, 1)
+
+    cat1 = Category("Категория 1", "Первая", [p1])
+    assert cat1.category_count == 1
+    assert cat1.product_count == 1
+    assert Category.category_count == 1
+    assert Category.product_count == 1
+
+    cat2 = Category("Категория 2", "Вторая", [p2])
+    assert cat2.category_count == 2
+    assert cat2.product_count == 2
+    assert Category.category_count == 2
+    assert Category.product_count == 2
 
 
-def test_category_counters():
-    # Обнулим счётчики перед тестом (для изоляции)
-    Category.total_categories = 0
-    Category.total_products = 0
+def test_main_scenario_like_in_14_1_main():
+    # Эмулируем логику из main.py
+    product1 = Product("Samsung Galaxy S23 Ultra", "256GB, Серый цвет, 200MP камера", 180000.0, 5)
+    product2 = Product("Iphone 15", "512GB, Gray space", 210000.0, 8)
+    product3 = Product("Xiaomi Redmi Note 11", "1024GB, Синий", 31000.0, 14)
 
-    p1 = Product("Телевизор", "4K TV", 80000.0, 5)
-    p2 = Product("Ноутбук", "Игровой ноутбук", 120000.0, 3)
+    category1 = Category(
+        "Смартфоны",
+        "Смартфоны, как средство не только коммуникации, но и получения дополнительных функций для удобства жизни",
+        [product1, product2, product3]
+    )
 
-    Category("Бытовая техника", "Для дома", [p1])
-    Category("Компьютеры", "Гаджеты", [p2])
+    assert category1.name == "Смартфоны"
+    assert len(category1.products) == 3
+    assert category1.category_count == 1
+    assert category1.product_count == 3
 
-    assert Category.total_categories == 2
-    assert Category.total_products == 2  # 1 товар в cat1 + 1 товар в cat2
+    product4 = Product('55" QLED 4K', "Фоновая подсветка", 123000.0, 7)
+    category2 = Category(
+        "Телевизоры",
+        "Современный телевизор, который позволяет наслаждаться просмотром, станет вашим другом и помощником",
+        [product4]
+    )
+
+    assert Category.category_count == 2
+    assert Category.product_count == 4
