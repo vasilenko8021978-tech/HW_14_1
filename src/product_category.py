@@ -3,35 +3,26 @@ from typing import List, Optional
 
 class Product:
     def __init__(self, name: str, description: str, price: float, quantity: int):
-        self.name = name
-        self.description = description
+        self.name = name.strip()
+        self.description = description.strip()
         self.__price = price
         self.quantity = quantity
 
     @property
     def price(self) -> float:
-        """Геттер для цены."""
         return self.__price
 
     @price.setter
     def price(self, value: float):
-        """Сеттер с проверкой на положительность."""
         if value <= 0:
             print("Цена не должна быть нулевая или отрицательная")
             return
-        # Для автоматических тестов input закомментирован
-        # if value < self.__price:
-        #     confirm = input(f"Подтвердите понижение цены с {self.__price} до {value} (y/n): ")
-        #     if confirm.lower() != 'y':
-        #         print("Действие отменено")
-        #         return
         self.__price = value
 
     @classmethod
     def new_product(
         cls, product_data: dict, products_list: Optional[List["Product"]] = None
     ) -> "Product":
-        """Создаёт продукт из словаря, объединяет дубли."""
         name = product_data["name"]
         description = product_data["description"]
         price = product_data["price"]
@@ -46,28 +37,57 @@ class Product:
 
         return cls(name, description, price, quantity)
 
+    def __str__(self):
+        return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
+
+    def __add__(self, other):
+        if not isinstance(other, Product):
+            raise TypeError("Нельзя складывать продукт с объектом другого типа")
+        if type(self) is not type(other):
+            raise TypeError("Нельзя складывать продукты разных классов")
+        return self.price * self.quantity + other.price * other.quantity
+
 
 class Category:
     category_count = 0
     product_count = 0
 
     def __init__(self, name: str, description: str, products: List[Product]):
-        self.name = name
-        self.description = description
+        self.name = name.strip()
+        self.description = description.strip()
         self.__products = products
 
         Category.category_count += 1
         Category.product_count += len(products)
 
     def add_product(self, product: Product):
-        """Добавляет продукт в категорию."""
         self.__products.append(product)
         Category.product_count += 1
 
     @property
     def products(self) -> str:
-        """Возвращает строку со всеми товарами."""
-        result = ""
-        for product in self.__products:
-            result += f"{product.name}, {product.price} руб. Остаток: {product.quantity} шт.\n"
-        return result
+        return "\n".join(str(product) for product in self.__products) + "\n"
+
+    def __str__(self):
+        total_quantity = sum(product.quantity for product in self.__products)
+        return f"{self.name}, количество продуктов: {total_quantity} шт."
+
+    # Внутренний метод для безопасного доступа (для итератора)
+    def _get_products(self) -> List[Product]:
+        return self.__products
+
+
+class CategoryIterator:
+    def __init__(self, category: Category):
+        self._products = category._get_products()
+        self._index = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self._index >= len(self._products):
+            raise StopIteration
+        product = self._products[self._index]
+        self._index += 1
+        return product
