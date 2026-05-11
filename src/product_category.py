@@ -43,9 +43,45 @@ class Product:
     def __add__(self, other):
         if not isinstance(other, Product):
             raise TypeError("Нельзя складывать продукт с объектом другого типа")
-        if type(self) is not type(other):
-            raise TypeError("Нельзя складывать продукты разных классов")
+        if type(self) is not type(other):  # ← строго одинаковые классы
+            raise TypeError("Нельзя складывать товары разных типов")
         return self.price * self.quantity + other.price * other.quantity
+
+
+class Smartphone(Product):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+        efficiency: str,
+        model: str,
+        memory: int,
+        color: str,
+    ):
+        super().__init__(name, description, price, quantity)
+        self.efficiency = efficiency
+        self.model = model
+        self.memory = memory
+        self.color = color
+
+
+class LawnGrass(Product):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+        country: str,
+        germination_period: str,
+        color: str,
+    ):
+        super().__init__(name, description, price, quantity)
+        self.country = country
+        self.germination_period = germination_period
+        self.color = color
 
 
 class Category:
@@ -55,12 +91,18 @@ class Category:
     def __init__(self, name: str, description: str, products: List[Product]):
         self.name = name.strip()
         self.description = description.strip()
-        self.__products = products
+        self.__products: List[Product] = []
+        for product in products:
+            self.add_product(product)  # используем защищённый метод
 
         Category.category_count += 1
-        Category.product_count += len(products)
+        # product_count обновляется в add_product
 
     def add_product(self, product: Product):
+        if not isinstance(product, Product):
+            raise TypeError(
+                "Можно добавлять только экземпляры Product или его наследников"
+            )
         self.__products.append(product)
         Category.product_count += 1
 
@@ -72,7 +114,6 @@ class Category:
         total_quantity = sum(product.quantity for product in self.__products)
         return f"{self.name}, количество продуктов: {total_quantity} шт."
 
-    # Внутренний метод для безопасного доступа (для итератора)
     def _get_products(self) -> List[Product]:
         return self.__products
 

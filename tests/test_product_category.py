@@ -1,6 +1,6 @@
 import pytest
 
-from src.product_category import Category, Product
+from src.product_category import Category, LawnGrass, Product, Smartphone
 
 
 @pytest.fixture(autouse=True)
@@ -109,3 +109,59 @@ def test_main_scenario_15_1():
     # Проверка сложения
     assert product1 + product2 == 180000.0 * 5 + 210000.0 * 8
     assert product1 + product3 == 180000.0 * 5 + 31000.0 * 14
+
+
+def test_smartphone_inheritance():
+    phone = Smartphone(
+        "iPhone",
+        "Описание",
+        100000.0,
+        5,
+        efficiency="A15",
+        model="13",
+        memory=256,
+        color="Серый",
+    )
+    assert phone.name == "iPhone"
+    assert phone.model == "13"
+    assert phone.memory == 256
+
+
+def test_lawn_grass_inheritance():
+    grass = LawnGrass(
+        "Трава",
+        "Для газона",
+        100.0,
+        50,
+        country="Канада",
+        germination_period="5 дней",
+        color="Тёмно-зелёный",
+    )
+    assert grass.country == "Канада"
+    assert grass.color == "Тёмно-зелёный"
+
+
+def test_add_product_type_check():
+    cat = Category("Тест", "Описание", [])
+    with pytest.raises(TypeError):
+        cat.add_product("не продукт")
+
+
+def test_add_product_allows_subclasses():
+    cat = Category("Тест", "Описание", [])
+    phone = Smartphone("P", "D", 100.0, 1, "E", "M", 128, "C")
+    cat.add_product(phone)
+    assert len(cat.products.strip().split("\n")) == 1
+
+
+def test_addition_same_type():
+    p1 = Product("A", "D", 100.0, 2)
+    p2 = Product("B", "D", 200.0, 3)
+    assert p1 + p2 == 800.0
+
+
+def test_addition_different_types():
+    p = Product("A", "D", 100.0, 1)
+    s = Smartphone("S", "D", 200.0, 1, "E", "M", 128, "C")
+    with pytest.raises(TypeError):
+        p + s
