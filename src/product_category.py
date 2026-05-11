@@ -1,12 +1,37 @@
+# src/product_category.py
+
+from abc import ABC, abstractmethod
 from typing import List, Optional
 
 
-class Product:
+class BaseProduct(ABC):
+    """Абстрактный базовый класс для всех продуктов."""
+
+    @abstractmethod
+    def __str__(self) -> str:
+        pass
+
+    @abstractmethod
+    def __add__(self, other) -> float:
+        pass
+
+
+class CreationLoggerMixin:
+    """Миксин: логирует создание объекта через repr при инициализации."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        print(repr(self))
+
+
+class Product(BaseProduct, CreationLoggerMixin):
     def __init__(self, name: str, description: str, price: float, quantity: int):
+        # Сначала инициализируем поля
         self.name = name.strip()
         self.description = description.strip()
         self.__price = price
         self.quantity = quantity
+        super().__init__()
 
     @property
     def price(self) -> float:
@@ -32,20 +57,28 @@ class Product:
             for prod in products_list:
                 if prod.name == name:
                     prod.quantity += quantity
-                    prod.__price = max(prod.__price, price)
+                    if price > prod.price:
+                        prod.price = price
                     return prod
 
         return cls(name, description, price, quantity)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
 
-    def __add__(self, other):
+    def __add__(self, other) -> float:
         if not isinstance(other, Product):
             raise TypeError("Нельзя складывать продукт с объектом другого типа")
-        if type(self) is not type(other):  # ← строго одинаковые классы
+        if type(self) is not type(other):
             raise TypeError("Нельзя складывать товары разных типов")
         return self.price * self.quantity + other.price * other.quantity
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}("
+            f"'{self.name}', '{self.description}', {self.price}, {self.quantity}"
+            f")"
+        )
 
 
 class Smartphone(Product):
@@ -60,11 +93,11 @@ class Smartphone(Product):
         memory: int,
         color: str,
     ):
-        super().__init__(name, description, price, quantity)
         self.efficiency = efficiency
         self.model = model
         self.memory = memory
         self.color = color
+        super().__init__(name, description, price, quantity)
 
 
 class LawnGrass(Product):
@@ -78,10 +111,10 @@ class LawnGrass(Product):
         germination_period: str,
         color: str,
     ):
-        super().__init__(name, description, price, quantity)
         self.country = country
         self.germination_period = germination_period
         self.color = color
+        super().__init__(name, description, price, quantity)
 
 
 class Category:
@@ -93,10 +126,8 @@ class Category:
         self.description = description.strip()
         self.__products: List[Product] = []
         for product in products:
-            self.add_product(product)  # используем защищённый метод
-
+            self.add_product(product)
         Category.category_count += 1
-        # product_count обновляется в add_product
 
     def add_product(self, product: Product):
         if not isinstance(product, Product):
@@ -108,27 +139,11 @@ class Category:
 
     @property
     def products(self) -> str:
-        return "\n".join(str(product) for product in self.__products) + "\n"
+        return "\n".join(str(p) for p in self.__products) + "\n"
 
-    def __str__(self):
-        total_quantity = sum(product.quantity for product in self.__products)
-        return f"{self.name}, количество продуктов: {total_quantity} шт."
+    def __str__(self) -> str:
+        total = sum(p.quantity for p in self.__products)
+        return f"{self.name}, количество продуктов: {total} шт."
 
     def _get_products(self) -> List[Product]:
         return self.__products
-
-
-class CategoryIterator:
-    def __init__(self, category: Category):
-        self._products = category._get_products()
-        self._index = 0
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if self._index >= len(self._products):
-            raise StopIteration
-        product = self._products[self._index]
-        self._index += 1
-        return product

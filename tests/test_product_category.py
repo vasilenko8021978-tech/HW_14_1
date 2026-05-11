@@ -1,6 +1,9 @@
+import io
+from unittest.mock import patch
+
 import pytest
 
-from src.product_category import Category, LawnGrass, Product, Smartphone
+from src.product_category import Product, Smartphone, LawnGrass, BaseProduct, Category
 
 
 @pytest.fixture(autouse=True)
@@ -165,3 +168,49 @@ def test_addition_different_types():
     s = Smartphone("S", "D", 200.0, 1, "E", "M", 128, "C")
     with pytest.raises(TypeError):
         p + s
+
+
+def test_product_is_not_abstract():
+    """Проверяем, что Product можно инстанцировать (реализует абстрактные методы)."""
+    p = Product("Тест", "Описание", 100.0, 5)
+    assert isinstance(p, BaseProduct)
+    assert str(p) == "Тест, 100.0 руб. Остаток: 5 шт."
+    assert (p + p) == 1000.0
+
+
+def test_creation_logger_mixin():
+    """Проверяем, что при создании объекта печатается repr."""
+    with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+        p = Product("Тест", "Описание", 100.0, 5)
+        assert p.name == "Тест"
+        output = mock_stdout.getvalue()
+        expected = "Product('Тест', 'Описание', 100.0, 5)\n"
+        assert output == expected
+
+
+def test_smartphone_instantiation():
+    phone = Smartphone(
+        "iPhone",
+        "Desc",
+        1000.0,
+        2,
+        efficiency="A15",
+        model="13",
+        memory=256,
+        color="Black",
+    )
+    assert phone.model == "13"
+    assert "iPhone" in str(phone)
+
+
+def test_lawn_grass_instantiation():
+    grass = LawnGrass(
+        "Трава",
+        "Для газона",
+        50.0,
+        100,
+        country="Россия",
+        germination_period="7 дней",
+        color="Зелёный",
+    )
+    assert grass.country == "Россия"
