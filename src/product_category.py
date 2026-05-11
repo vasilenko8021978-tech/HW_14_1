@@ -20,18 +20,18 @@ class CreationLoggerMixin:
     """Миксин: логирует создание объекта через repr при инициализации."""
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        # Не вызываем super() — только логируем
         print(repr(self))
 
 
 class Product(BaseProduct, CreationLoggerMixin):
     def __init__(self, name: str, description: str, price: float, quantity: int):
-        # Сначала инициализируем поля
         self.name = name.strip()
         self.description = description.strip()
         self.__price = price
         self.quantity = quantity
-        super().__init__()
+        # Вызываем миксин после инициализации полей
+        CreationLoggerMixin.__init__(self)
 
     @property
     def price(self) -> float:
@@ -66,7 +66,7 @@ class Product(BaseProduct, CreationLoggerMixin):
     def __str__(self) -> str:
         return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
 
-    def __add__(self, other) -> float:
+    def __add__(self, other: "Product") -> float:
         if not isinstance(other, Product):
             raise TypeError("Нельзя складывать продукт с объектом другого типа")
         if type(self) is not type(other):
@@ -138,12 +138,10 @@ class Category:
         Category.product_count += 1
 
     @property
-    def products(self) -> str:
-        return "\n".join(str(p) for p in self.__products) + "\n"
+    def products(self) -> List[Product]:
+        """Возвращаем список, чтобы len(category.products) работало корректно."""
+        return self.__products
 
     def __str__(self) -> str:
         total = sum(p.quantity for p in self.__products)
         return f"{self.name}, количество продуктов: {total} шт."
-
-    def _get_products(self) -> List[Product]:
-        return self.__products

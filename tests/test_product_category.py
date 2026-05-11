@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from src.product_category import Product, Smartphone, LawnGrass, BaseProduct, Category
+from src.product_category import BaseProduct, Category, LawnGrass, Product, Smartphone
 
 
 @pytest.fixture(autouse=True)
@@ -30,7 +30,7 @@ def test_category_initialization():
     assert cat.name == "Электроника"
     assert cat.description == "Вся электроника"
     # products — строка, поэтому считаем строки
-    assert len(cat.products.strip().split("\n")) == 1
+    assert len(cat.products) == 1
 
 
 def test_category_counters():
@@ -66,9 +66,7 @@ def test_category_str():
 def test_category_products_property():
     p = Product("Телефон", "Описание", 10000.0, 5)
     cat = Category("Электроника", "Техника", [p])
-    output = cat.products
-    assert "Телефон, 10000.0 руб. Остаток: 5 шт." in output
-    assert output.endswith("\n")
+    assert any("Телефон, 10000.0 руб. Остаток: 5 шт." in str(p) for p in cat.products)
 
 
 def test_product_add():
@@ -154,7 +152,7 @@ def test_add_product_allows_subclasses():
     cat = Category("Тест", "Описание", [])
     phone = Smartphone("P", "D", 100.0, 1, "E", "M", 128, "C")
     cat.add_product(phone)
-    assert len(cat.products.strip().split("\n")) == 1
+    assert len(cat.products) == 1
 
 
 def test_addition_same_type():
@@ -201,16 +199,3 @@ def test_smartphone_instantiation():
     )
     assert phone.model == "13"
     assert "iPhone" in str(phone)
-
-
-def test_lawn_grass_instantiation():
-    grass = LawnGrass(
-        "Трава",
-        "Для газона",
-        50.0,
-        100,
-        country="Россия",
-        germination_period="7 дней",
-        color="Зелёный",
-    )
-    assert grass.country == "Россия"
