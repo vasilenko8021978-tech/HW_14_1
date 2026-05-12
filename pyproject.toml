@@ -20,3 +20,9 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.flake8]
 max-line-length = 119
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == \"__main__\":"
+]
