@@ -3,7 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
-from src.product_category import BaseProduct, Category, LawnGrass, Product, Smartphone
+from src.product_category import (BaseProduct, Category, LawnGrass, Product,
+                                  Smartphone)
 
 
 @pytest.fixture(autouse=True)
@@ -331,3 +332,15 @@ def test_new_product_with_duplicates():
 
     assert p2.quantity == 8  # 5 + 3
     assert p2.price == 12000.0  # Максимальная цена
+
+
+def test_middle_price_with_products():
+    p1 = Product("P1", "D1", 100.0, 1)
+    p2 = Product("P2", "D2", 200.0, 1)
+    cat = Category("Кат", "Описание", [p1, p2])
+    assert cat.middle_price() == 150.0
+
+
+def test_middle_price_empty_category():
+    cat = Category("Пустая", "Описание", [])
+    assert cat.middle_price() == 0.0
