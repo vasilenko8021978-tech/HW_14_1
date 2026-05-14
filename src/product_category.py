@@ -137,6 +137,17 @@ class Category:
         self.__products.append(product)
         Category.product_count += 1
 
+    def middle_price(self) -> float:
+        """Возвращает средний ценник всех товаров в категории.
+
+        Если категория пуста (деление на ноль), возвращает 0.
+        """
+        try:
+            total = sum(product.price for product in self.__products)
+            return total / len(self.__products)
+        except ZeroDivisionError:
+            return 0.0
+
     @property
     def products(self) -> List[Product]:
         """Возвращаем список, чтобы len(category.products) работало корректно."""
